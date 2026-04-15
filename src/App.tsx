@@ -100,6 +100,17 @@ function App() {
   const isCreator = profile.role === 'creator'
 
   const renderPage = () => {
+    // Handle modal pages
+    if (currentPage === 'terms' || currentPage === 'privacy' || currentPage === 'faq' || 
+        currentPage === 'about' || currentPage === 'cookie' || currentPage === 'support') {
+      return null // These are handled in Footer modals
+    }
+
+    // Handle creator profile view
+    if (currentPage === 'creator-profile') {
+      return <CreatorProfilePage profile={profile} />
+    }
+
     if (isFan) {
       switch (currentPage) {
         case 'home':
@@ -135,13 +146,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {renderPage()}
-      <BottomNav 
-        currentPage={currentPage} 
-        onNavigate={setCurrentPage} 
-        role={profile.role} 
-      />
-      <AIChatButton />
+      {!isLoggedIn ? (
+        <LandingPage />
+      ) : (
+        <>
+          {renderPage()}
+          <BottomNav 
+            currentPage={currentPage} 
+            onNavigate={setCurrentPage} 
+            role={profile.role} 
+          />
+          <AIChatButton />
+        </>
+      )}
     </div>
   )
 }
