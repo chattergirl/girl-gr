@@ -10,7 +10,19 @@ export interface Profile {
   is_verified: boolean
   is_over_18: boolean
   wallet_balance: number
+  profile_url: string
   created_at: string
+  updated_at?: string
+}
+
+export interface ProfileLink {
+  id: string
+  creator_id: string
+  link_token: string
+  link_url: string
+  clicks_count: number
+  created_at: string
+  updated_at?: string
 }
 
 export interface Content {
@@ -80,4 +92,18 @@ export interface Notification {
   created_at: string
 }
 
-export type Page = 'landing' | 'home' | 'messages' | 'vault' | 'account' | 'dashboard' | 'studio' | 'creator-messages' | 'creator-account'
+export interface Follow {
+  id: string
+  follower_id: string
+  following_id: string
+  created_at: string
+}
+
+export interface Like {
+  id: string
+  user_id: string
+  content_id: string
+  created_at: string
+}
+
+export type Page = 'landing' | 'home' | 'messages' | 'vault' | 'account' | 'dashboard' | 'studio' | 'creator-messages' | 'creator-account' | 'creator-profile' | 'terms' | 'privacy' | 'faq' | 'about' | 'cookie' | 'support'
