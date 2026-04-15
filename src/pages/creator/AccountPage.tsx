@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Wallet, Settings, LogOut, ChevronRight, CheckCircle, Shield, Edit3, X, Loader2, Upload } from 'lucide-react'
+import { Wallet, Settings, LogOut, ChevronRight, CheckCircle, Shield, Edit3, X, Loader2, Upload, Share2, Copy, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Profile, UserRole } from '../../types'
 
@@ -12,6 +12,7 @@ export function CreatorAccountPage({ profile, onSwitchRole }: CreatorAccountPage
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
   const [showWithdrawal, setShowWithdrawal] = useState(false)
+  const [showShareProfile, setShowShareProfile] = useState(false)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -101,6 +102,17 @@ export function CreatorAccountPage({ profile, onSwitchRole }: CreatorAccountPage
         {/* Menu Items */}
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <button
+            onClick={() => setShowShareProfile(true)}
+            className="w-full p-4 flex items-center justify-between hover:bg-secondary/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Share2 className="w-5 h-5 text-muted-foreground" />
+              <span className="text-foreground">Share Profile</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="border-t border-border" />
+          <button
             onClick={() => setShowEditProfile(true)}
             className="w-full p-4 flex items-center justify-between hover:bg-secondary/50 transition-colors"
           >
@@ -173,6 +185,11 @@ export function CreatorAccountPage({ profile, onSwitchRole }: CreatorAccountPage
       {/* Withdrawal Modal */}
       {showWithdrawal && (
         <WithdrawalModal balance={profile.wallet_balance || 1250} onClose={() => setShowWithdrawal(false)} />
+      )}
+
+      {/* Share Profile Modal */}
+      {showShareProfile && (
+        <ShareProfileModal profile={profile} onClose={() => setShowShareProfile(false)} />
       )}
     </div>
   )
@@ -305,10 +322,134 @@ function VerificationModal({ profile, onClose }: VerificationModalProps) {
           >
             Done
           </button>
-        </div>
       </div>
-    )
+    </div>
+  )
+}
+
+interface ShareProfileModalProps {
+  profile: Profile
+  onClose: () => void
+}
+
+function ShareProfileModal({ profile, onClose }: ShareProfileModalProps) {
+  const [copied, setCopied] = useState(false)
+  
+  const profileLink = `${window.location.origin}/creator/${profile.username}`
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(profileLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${profile.display_name || profile.username}'s xFans Profile`,
+          text: profile.bio || 'Check out my profile on xFans!',
+          url: profileLink,
+        })
+      } catch (err) {
+        console.log('Error sharing:', err)
+      }
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className="flex items-center justify-between p-4">
+          <button onClick={onClose} className="text-foreground">
+            <X className="w-6 h-6" />
+          </button>
+          <h1 className="font-semibold text-foreground">Share Profile</h1>
+          <div className="w-6" />
+        </div>
+      </header>
+
+      <div className="max-w-lg mx-auto p-6 space-y-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Share Your Profile</h2>
+          <p className="text-muted-foreground">Let your fans discover and support you</p>
+        </div>
+
+        {/* Profile Preview */}
+        <div className="bg-card rounded-xl p-4 border border-border text-center">
+          {profile.avatar_url && (
+            <img
+              src={profile.avatar_url}
+              alt={profile.display_name || profile.username}
+              className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
+            />
+          )}
+          <p className="font-semibold text-foreground">{profile.display_name || profile.username}</p>
+          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+        </div>
+
+        {/* Share Link */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-foreground">Your Profile Link</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={profileLink}
+              readOnly
+              className="flex-1 px-4 py-3 bg-secondary border border-border rounded-lg text-foreground text-sm"
+            />
+            <button
+              onClick={handleCopyLink}
+              className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span className="text-sm">Copy</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Share Methods */}
+        {navigator.share && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-foreground">Share via</label>
+            <button
+              onClick={handleShare}
+              className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 font-medium"
+            >
+              <Share2 className="w-5 h-5" />
+              Share Profile
+            </button>
+          </div>
+        )}
+
+        {/* QR Code Placeholder */}
+        <div className="bg-secondary rounded-xl p-6 text-center">
+          <p className="text-sm text-muted-foreground mb-3">Share your QR code</p>
+          <div className="w-32 h-32 bg-background rounded-lg mx-auto flex items-center justify-center">
+            <span className="text-xs text-muted-foreground">QR Code</span>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3 bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
